@@ -57,6 +57,7 @@
 							option_box.show();	
 							scroll_index();
 						}
+						key = new Array();
 					}
 					else{
 						console.log('call operate');
@@ -267,9 +268,11 @@
 					// down arrow is pressed
 					else if(e.keyCode == 40){
 						down_active_option();
+						key = new Array();
 					}
 					else if(e.keyCode == 38){
 						up_active_option();
+						key = new Array();
 					}
 					//press key not enter nor escape
 					else{
