@@ -9,7 +9,7 @@ This is a Jquery plugin for custom select box with fixed css style. It contains 
 
 #Usage
 
-You can use this in html by   `$element.create_select()` in DOM ready function and can add option list by '$element.create_select({data:[{"key":1,"value":"value1"},{"key":2,"value":"value2"}]})' .You must need to insert jquery library and my script js file and also style sheet.
+You can use this in html by   `$element.create_select()` in DOM ready function and can add option list by `$element.create_select({data:[{"key":1,"value":"value1"},{"key":2,"value":"value2"}]})` .You must need to insert jquery library and my script js file and also style sheet.
 
 #Contribution
 
