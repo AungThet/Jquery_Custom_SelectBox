@@ -1,7 +1,4 @@
-$(document).ready(function(){
-		$('.search_month').create_select();
-	});
-
+	
 	(function(){
 		$.fn.create_select = function(option){
 
