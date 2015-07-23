@@ -6,16 +6,16 @@
 	<link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-	<div class="search_container">
-		<div class="search_month">
-		</div>
+<div class="search_month">
 	</div>
 </body>
 <script src="js/jquery.js"></script>
 <script src="js/script.js"></script>
 <script>
 	$(document).ready(function(){
-		$('.search_month').create_select();
+		$('.search_month').create_select({
+			name : "SelectName"
+		});
 	});
 
 </script>

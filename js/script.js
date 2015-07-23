@@ -4,13 +4,24 @@
 
 			var setting = $.extend(
 			{
-				data: [{"key":1,"value":"Januray"},{"key":1,"value":"Febuary"},{"key":1,"value":"March"},{"key":1,"value":"April"},{"key":1,"value":"May"},{"key":1,"value":"June"},{"key":1,"value":"July"},{"key":1,"value":"August"},{"key":1,"value":"September"},{"key":1,"value":"October"},{"key":1,"value":"November"},{"key":1,"value":"December"}]
+				data: [{"key":1,"value":"Januray"},{"key":2,"value":"Febuary"},{"key":1,"value":"March"},{"key":1,"value":"April"},{"key":1,"value":"May"},{"key":1,"value":"June"},{"key":1,"value":"July"},{"key":1,"value":"August"},{"key":1,"value":"September"},{"key":1,"value":"October"},{"key":1,"value":"November"},{"key":1,"value":"December"}]
 			}
 			,$.fn.create_select.default,option);
 
 			var list = setting.data ;
 
 			var select_box = $(this);
+
+			$(this).wrap("<div class='search_container'>");
+
+			var container = $(this).parent();
+			var hidden_select = $('<select>',{class:setting.class, name: setting.name});
+
+			hidden_select.hide();
+
+			container.append(hidden_select);
+
+			var hidden_select = $(this).siblings('select');
 
 			var div_select = $('<div>',{class:"select_month"});
 			var div_value = $('<div>',{class:"value"});
@@ -40,17 +51,15 @@
 			option_box.children('.option').click(function(){
 				$(this).siblings().removeClass('active');
 				$(this).addClass('active');
-				select.children('.value').text($(this).text());
+				var selected = list[$(this).index()];
+				bindSelect(selected);
 			});
 			
 			select_box.focus(function(){
 				key = new Array();
-				$(document).keydown(function(e){					
-					console.log(e.keyCode);
+				$(document).keydown(function(e){
 					if(e.keyCode==40){
-						console.log('key code 40 ');
 						if(option_box.is(':visible')){
-							console.log('call operate');
 							operate(e);	
 						}
 						else{
@@ -60,21 +69,30 @@
 						key = new Array();
 					}
 					else{
-						console.log('call operate');
 						operate(e);							
 					}
 					return false;
 				});
 			});
 
+			//clear hidden select box
+			function clearSelect(){
+				hidden_select.html('');
+			}
+
+			//bind option to hidden select
+			function bindSelect(obj){
+				clearSelect();
+				div_value.text(obj.value || console.error(obj)).end().attr('key', obj.key);
+				hidden_select.append("<option value=\""+obj.key+"\" selected=\"selected\">"+obj.value+"</option>");
+			}
+
 			//bind option list to select box
 			function bind_option(list){
-				console.log("bind");
 				var ul = $('<ul>',{class:"month_combo"});
 				var li = $('<li>');
 
 				$.each(list, function(index,value){
-					console.log(value.value);
 					ul.append(li.clone().addClass(value.key+" option").text(value.value));
 				});
 
@@ -83,11 +101,7 @@
 
 			//initiate value 
 			function value_initiate(){
-				var first_element = select_box.find('ul')
-				.children()
-				.first()
-				.text();
-				select.find('.value').text(first_element);
+				bindSelect(list[0]);
 			}
 
 			//get option list from select box
@@ -112,7 +126,7 @@
 			function shift_index(input_string, option_list,type){
 
 				//get option list
-				var list = option_list;
+				var option_list = option_list;
 				//get typed string
 				var item = input_string.toLowerCase().split('');
 
@@ -123,7 +137,7 @@
 					var found = false;
 
 					//loop list to match each option to item
-					$.each(list,function(index,value){
+					$.each(option_list,function(index,value){
 						var array = value.toLowerCase().split('');
 
 						//to check item's last character
@@ -146,7 +160,8 @@
 										//set active class to that option
 										set_active(index);
 										if(type){
-											select_box.find('.value').text(select_box.find('.active').text());
+											var selected = list[select_box.find('.active').index()];
+											bindSelect(selected);
 										}
 										//start count for watch time to reset item's string after a specific time (2s)
 										start_count();
@@ -175,7 +190,6 @@
 				try{
 					//if watcher timeout is set
 					clearTimeout(watcher);
-					console.log('clear');
 				}
 				catch(err){
 					console.debug('no timer is set');
@@ -205,8 +219,6 @@
 			function down_active_option(){
 				var current_index = option_box.find('.active').index();
 				var test = option_box.children('.option');
-				console.log(current_index+" current active index");
-				console.log(option_box.children('.option').last().index());
 				if(current_index<0){
 					option_box.children().eq(0).addClass('active');
 				}
@@ -220,14 +232,11 @@
 				}
 
 				scroll_index();
-				console.log(option_box.find('.active').index()+" edit index");
 			}
 
 			function up_active_option(){
 				var current_index = option_box.find('.active').index();
 				var test = option_box.children('.option');
-				console.log(current_index+" current active index");
-				console.log(option_box.children('.option').last().index());
 				if(current_index<0){
 					option_box.children().last().addClass('active');
 				}
@@ -241,14 +250,12 @@
 				}
 
 				scroll_index();
-				console.log(option_box.find('.active').index()+" edit index");
 			}
 
 			//main operate function
 			function operate(e){
 				// if select box is drop 
 				if(option_box.is(':visible')){
-					console.log(e.keyCode);
 					//if esc key is pressed
 					if(e.keyCode==27){
 						//hide select box
@@ -259,9 +266,9 @@
 						//if there is any active class
 						if(option_box.find('.active').length>0){
 							//get text from active class
-							var choice = option_box.find('.active').text();
+							var selected = list[option_box.find('.active').index()];
 							//set got text select box of 
-							select.find('.value').text(choice);
+							bindSelect(selected);
 							option_box.hide();
 						}
 					}
