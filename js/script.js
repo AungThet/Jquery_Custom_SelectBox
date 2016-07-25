@@ -4,11 +4,133 @@
 
 			var setting = $.extend(
 			{
-				data: [{"key":1,"value":"Januray"},{"key":2,"value":"Febuary"},{"key":1,"value":"March"},{"key":1,"value":"April"},{"key":1,"value":"May"},{"key":1,"value":"June"},{"key":1,"value":"July"},{"key":1,"value":"August"},{"key":1,"value":"September"},{"key":1,"value":"October"},{"key":1,"value":"November"},{"key":1,"value":"December"}]
+				data: [{"key":1,"value":"Januray"},{"key":2,"value":"Febuary"},{"key":3,"value":"March"},{"key":4,"value":"April"},{"key":5,"value":"May"},{"key":6,"value":"June"},{"key":7,"value":"July"},{"key":8,"value":"August"},{"key":9,"value":"September"},{"key":10,"value":"October"},{"key":11,"value":"November"},{"key":12,"value":"December"}]
 			}
 			,$.fn.create_select.default,option);
 
-			var list = setting.data ;
+			var dataSource = {
+			data :  [{"key":1,"value":"Januray"},{"key":2,"value":"Febuary"},{"key":3,"value":"March"},{"key":4,"value":"April"},{"key":5,"value":"May"},{"key":6,"value":"June"},{"key":7,"value":"July"},{"key":8,"value":"August"},{"key":9,"value":"September"},{"key":10,"value":"October"},{"key":11,"value":"November"},{"key":12,"value":"December"}]
+			,setData : function(list){
+				if(this.checkValidData(list)){
+					this.data = list;
+				}
+			}
+			,getData: function(){
+				if(this.checkValidData(this.data)){
+					return this.data;
+				}
+			}
+			,getFirstData : function(){
+				if(this.checkValidData(this.data)){
+					return this.data[0];
+				}
+			}
+			,getLastData :  function(){
+				if(this.checkValidData(this.data)){
+					return this.data[this.data.length - 1];
+				}
+			}
+			,getDataByIndex : function(index){
+				if(this.checkValidData(this.data)){
+					return this.data[index];
+				}
+			}
+			,getDataByKey : function(key){
+				if(this.checkValidData(this.data)){
+					return this.data.filter(function(obj){
+						return obj.key === key;
+					})[0];
+				}
+			}
+			,getDataByValue : function(value){
+				if(this.checkValidData(this.data)){
+					return this.data.filter(function(obj){
+						return obj.value === value;
+					})[0];
+				}
+			}
+			,checkValidData: function(data){
+				if(data instanceof Array){ // check list is array or not
+					if(data[0].key && data[0].value){ // check if valid object array 
+						return true;
+					}
+					else{
+						return false;
+					}	
+				}
+				else {
+					return false;
+				}
+			}
+
+		};
+
+		var elementSource = {
+			elements : []
+			,getElements : function(){
+				return this.elements;
+			}
+			,setElements : function(elements){
+				this.elements = elements;
+			}
+			,pushElement : function(element){
+				this.elements.push(element);
+			}
+			,getElementByObj : function(object){
+				return this.elements.filter(function(obj){
+					return obj.hasClass(object.key) && obj.text() === object.value;
+				})[0];
+			}
+			,getElementByKey : function(key){
+				return this.elements.filter(function(obj){
+					return obj.hasClass(key);
+				})[0];
+			}
+			,getElementByValue : function(value){
+				return this.elements.filter(function(obj){
+					return obj.text() === value;
+				})[0];
+			}
+		};
+
+		var keyGenerator = {
+			key : []
+			,getKey : function(){
+				return this.key;
+			}
+			,getKeyString: function(){
+				var result ="";
+				$.each(this.key,function(index, value){
+					result += String.fromCharCode(value).toLowerCase();
+				});
+				return result;
+			}
+			,pushKey : function(value){
+				this.key.push(value);
+			}
+			,resetKey : function(){
+				this.key = [];
+			}
+			,startCounter : function(){
+				var $this = this;
+				var watcher ;
+				try{
+					//if watcher timeout is set
+					clearTimeout(watcher);
+				}
+				catch(err){
+					console.debug('no timer is set');
+				}
+				//set time to reset item's string
+				watcher = setTimeout(function(){
+					//reset item's string
+					$this.key = [];
+				},1500);
+			}
+
+		};
+
+			dataSource.setData(setting.data);
 
 			var select_box = $(this);
 
@@ -33,7 +155,7 @@
 			select_box.append(div_select, down_icon);
 
 			//bind option to select box
-			bind_option(list);
+			bind_option(dataSource.getData());
 
 			select_box.attr('tabindex',0);
 			var select = select_box.children().first();
@@ -51,16 +173,17 @@
 			option_box.children('.option').click(function(){
 				$(this).siblings().removeClass('active');
 				$(this).addClass('active');
-				var selected = list[$(this).index()];
+				var selected = dataSource.getDataByIndex($(this).index());
 				bindSelect(selected);
 			});
-			
-			select_box.focus(function(){
-				key = new Array();
-				$(document).keydown(function(e){
-					if(e.keyCode==40){
+
+		$(document).keydown(function(e){
+			if(select_box.is(":focus")){
+					key = new Array();
+					
+					if(e.keyCode==40){ // down arrow
 						if(option_box.is(':visible')){
-							operate(e);	
+							goNext(e);
 						}
 						else{
 							option_box.show();	
@@ -68,12 +191,71 @@
 						}
 						key = new Array();
 					}
+					else if(e.keyCode === 38){ // up key
+						goPrev(e);
+					}
+					else if(e.keyCode === 13){ // enter key
+						var active = get_active();
+						//if there is any active class
+						if(active){
+							//get text from active class
+							var selected = dataSource.getDataByIndex($(active).index());
+							//set got text select box of 
+							bindSelect(selected);
+							option_box.hide();
+						}	
+						else{
+							console.log("no active item");
+						}						
+					}
+					else if(e.keyCode === 27){ // esc key
+						option_box.hide();
+					}
 					else{
-						operate(e);							
+						//push typed key to key arrray
+						keyGenerator.pushKey(e.keyCode);
+						//convert key array to string
+						var input_string = keyGenerator.getKeyString();
+						//compare character and scroll to matched option
+						shift_index(input_string, false);
 					}
 					return false;
-				});
-			});
+			}
+			else{
+				console.log("not focus");
+			}
+		});
+
+		var goPrev = function (e){
+			var active = get_active();
+			if(active){
+				if($(active).prev().index() !== -1){
+					set_active($(active).prev());
+				}
+				else{
+					set_active($(active).siblings('li:last-child'));
+				}
+				
+			}
+			else{
+				set_active(select_box.find(".month_combo").last());
+			}
+		};
+		var goNext = function (e){
+			var active = get_active();
+			if(active){
+				if($(active).next().index() !== -1){
+					set_active($(active).next());
+				}
+				else{
+					set_active(select_box.find(".month_combo").children("li:first"));
+				}
+				
+			}
+			else{
+				set_active(select_box.find(".month_combo").children("li:first"));
+			}
+		};
 
 			//clear hidden select box
 			function clearSelect(){
@@ -93,15 +275,18 @@
 				var li = $('<li>');
 
 				$.each(list, function(index,value){
-					ul.append(li.clone().addClass(value.key+" option").text(value.value));
+					var element = li.clone().addClass(value.key+" option").text(value.value);
+					elementSource.pushElement(element);
+					ul.append(element);
 				});
 
 				select_box.append(ul);
+				
 			}
 
 			//initiate value 
 			function value_initiate(){
-				bindSelect(list[0]);
+				bindSelect(dataSource.getFirstData());
 			}
 
 			//get option list from select box
@@ -123,22 +308,18 @@
 			}
 
 			//do auto complete operation 
-			function shift_index(input_string, option_list,type){
-
-				//get option list
-				var option_list = option_list;
+			function shift_index(input_string, type){
+				var option_list = dataSource.getData();
 				//get typed string
 				var item = input_string.toLowerCase().split('');
 
 				//if type string length greater than 0
 				if(item.length>0){
-
 					//set item found status to false
 					var found = false;
-
 					//loop list to match each option to item
-					$.each(option_list,function(index,value){
-						var array = value.toLowerCase().split('');
+					$.each(option_list,function(index,obj){
+						var array = obj.value.toLowerCase().split('');
 
 						//to check item's last character
 						var last = item.length-1;
@@ -158,13 +339,14 @@
 										//scroll to that option index
 										scroll_index();
 										//set active class to that option
-										set_active(index);
+
+										set_active(elementSource.getElementByValue(obj.value));
 										if(type){
-											var selected = list[select_box.find('.active').index()];
+											var selected = dataSource.getDataByIndex(select_box.find('.active').index());
 											bindSelect(selected);
 										}
 										//start count for watch time to reset item's string after a specific time (2s)
-										start_count();
+										keyGenerator.startCounter();
 										//item's char index reset to start
 										pointer=0;
 										//set found state to true
@@ -183,24 +365,6 @@
 }
 }
 
-			//counter to reset item's string
-			function start_count(){
-				var first = key;
-				var watcher ;
-				try{
-					//if watcher timeout is set
-					clearTimeout(watcher);
-				}
-				catch(err){
-					console.debug('no timer is set');
-				}
-				//set time to reset item's string
-				watcher = setTimeout(function(){
-					//reset item's string
-					key = new Array();
-					console.debug('reset');
-				},1500);
-			}
 
 			//scroll to a specifice index 
 			function scroll_index(){
@@ -209,10 +373,18 @@
 				option_box.scrollTop(option_height*index);
 			}
 
+			function get_active(){
+				return select_box.find(".month_combo").children("li.option.active")[0];
+			}
+
 			// add active class to a specific index
-			function set_active(index){
+			function set_active(item){
+				if(!item instanceof jQuery){
+					item = $(item);
+				}
 				option_box.find('.option').removeClass('active');
-				option_box.children('.option:nth-child('+(index+1)+')').addClass('active');
+				item.addClass('active');
+				scroll_index();
 			}
 
 			//down active option 
@@ -288,7 +460,7 @@
 						//convert key array to string
 						var input_string = out(key);
 						//compare character and scroll to matched option
-						shift_index(input_string, option_list,false);
+						shift_index(input_string, false);
 					}
 				}
 				//if combo option box is not visible
@@ -298,7 +470,7 @@
 					//convert key array to string
 					var input_string = out(key);
 					//compare character and scroll to matched option
-					shift_index(input_string, option_list,true);
+					shift_index(input_string, true);
 				}
 			}
 		}
