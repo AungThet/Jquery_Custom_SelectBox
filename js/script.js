@@ -92,15 +92,7 @@
 				})[0];
 			}
 		};
-		var watcher;
 
-		function resetKey (){
-			
-		}
-		function clearTimeout(){
-
-		};
-		
 		var keyGenerator = {
 			timer: null
 			,key : []
@@ -116,15 +108,13 @@
 				this.key.push(value);
 			}
 			,resetKey : function(){
-				console.log("reset");
 				this.key = [];
 			}
 			,startCounter : function(){
 				clearTimeout(this.timer);
 				this.timer = setTimeout(function(){
-					console.log("timeout");
-					this.timer = null;
-				},1500);
+					keyGenerator.resetKey();
+				}, 1100)
 			}
 
 		};
@@ -178,7 +168,6 @@
 
 			$(document).keydown(function(e){
 				if(select_box.is(":focus")){
-
 					if(option_box.is(':visible')){ // drop box is opened
 						if(e.keyCode==40){ // down arrow
 							goNext(e);
@@ -211,15 +200,28 @@
 					}
 				}
 					else{ // drop box is closed
+						if(e.keyCode==40){ // down arrow
+							goNext(e);
+						}
+						else if(e.keyCode === 38){ // up key
+							goPrev(e);
+						}
+						else{
+							//push typed key to key arrray
+							keyGenerator.pushKey(e.keyCode);
+							//compare character and scroll to matched option
+							shift_index(false);
+						}
+					var selected = dataSource.getDataByIndex(select_box.find('.active').index());
+					bindSelect(selected);
+				}
 
-					}
-					
-					return false;
-				}
-				else{
-					console.log("not focus");
-				}
-			});
+				return false;
+			}
+			else{
+				console.log("not focus");
+			}
+		});
 
 			var goPrev = function (e){
 				var active = get_active();
@@ -295,11 +297,6 @@
 
 			//create typed keycode to string
 			function out(data){
-				/*var result ='';
-				$.each(data,function(index, value){
-					result += String.fromCharCode(value).toLowerCase();
-				});
-				return result;*/
 				data = $.map(data, function(value, index){
 					return String.fromCharCode(value).toLowerCase();
 				});
@@ -309,9 +306,10 @@
 			//do auto complete operation 
 			function shift_index(type){
 				var option_list = dataSource.getData();
+
 				//get typed string
-				
 				var item = keyGenerator.getKeyList();
+
 				//if type string length greater than 0
 				if(item.length>0){
 					//set item found status to false
@@ -320,7 +318,7 @@
 					$.each(option_list,function(index,obj){
 						var array = obj.value.toLowerCase().split('');
 
-						//to check item's last character
+						//to check item's last character index
 						var last = item.length-1;
 
 						//to index current char of item
@@ -344,8 +342,7 @@
 											var selected = dataSource.getDataByIndex(select_box.find('.active').index());
 											bindSelect(selected);
 										}
-										//start count for watch time to reset item's string after a specific time (2s)
-										keyGenerator.startCounter();
+										
 										//item's char index reset to start
 										pointer=0;
 										//set found state to true
@@ -361,6 +358,8 @@
 
 						});
 					});
+
+					keyGenerator.startCounter();
 				}
 			}
 
